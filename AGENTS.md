@@ -9,7 +9,6 @@
 |--------|------|
 | `deeple-context` | **도메인 지식(what)** — 서비스 개요, 도메인 용어, 비즈니스 규칙, 정책, 페르소나 |
 | `deeple-skill` | **범용 실행 도구(how)** — 프로세스, 워크플로우, 체크리스트 |
-| `deeple-tools` | 자동화/모니터링/업로더 등 도구/인프라 |
 | `GOCHO_BE` | 백엔드 코드 + 기술 문서 (`docs/`) |
 | `gocho` | 웹 프론트 코드 + 기술 문서 (`docs/`) |
 | `flutter-gocho-app` | Flutter 앱 코드 + 기술 문서 (`docs/`) |
