@@ -53,29 +53,34 @@ Context는 "무엇(what)"만 담는다.
 ```
 deeple-context/
 ├── AGENTS.md              ← 이 파일
-├── shared/                ← 공통 조직 지식
-│   ├── claude-code-overview.md   ← AI 도구 생태계 개요
-│   ├── workspace-guide.md        ← 워크스페이스 구조, Git 규칙, 컨벤션
-│   ├── db-guide.md               ← DB Agent & MCP MySQL 사용 가이드
-│   ├── mcp-figma-setup.md        ← Figma MCP 설정
-│   ├── mcp-mysql-setup.md        ← MySQL MCP 설정
-│   └── mcp-puppeteer-setup.md    ← Puppeteer MCP 설정
-└── dmand/                 ← 디맨드 서비스 도메인 지식
-    ├── design-system.md
-    ├── service.md         ← 서비스 개요, 주요 플로우
-    ├── domain/
-    │   ├── glossary.md    ← 도메인 용어집
-    │   └── business-rules.md ← 비즈니스 규칙
-    └── cs/
-        ├── AGENTS.md      ← CS 스킬 가이드 (전체 흐름)
-        ├── persona.md     ← CS 응대 페르소나
-        ├── refund-policy.md ← 환불 정책
-        ├── account-policy.md ← 계정 정책
-        ├── mentoring-policy.md ← 멘토링 중재 정책
-        ├── data-curation-policy.md ← 데이터 큐레이션 정책
-        ├── faq-guide.md   ← FAQ 가이드
-        ├── escalation.md  ← 에스컬레이션 정책
-        └── screen-code-db-map.md ← CS 화면→코드→DB 매핑
+└── docs/                  ← 도메인 지식 문서 (LLM Wiki)
+    ├── shared/            ← 공통 조직 지식
+    │   ├── claude-code-overview.md
+    │   ├── workspace-guide.md
+    │   ├── db-guide.md
+    │   ├── mcp-figma-setup.md
+    │   ├── mcp-mysql-setup.md
+    │   └── mcp-puppeteer-setup.md
+    ├── dmand/             ← 디맨드 서비스 도메인 지식
+    │   ├── design-system.md
+    │   ├── service.md
+    │   ├── domain/
+    │   │   ├── glossary.md
+    │   │   └── business-rules.md
+    │   └── cs/
+    │       ├── AGENTS.md
+    │       ├── persona.md
+    │       ├── refund-policy.md
+    │       ├── account-policy.md
+    │       ├── mentoring-policy.md
+    │       ├── data-curation-policy.md
+    │       ├── faq-guide.md
+    │       ├── escalation.md
+    │       └── screen-code-db-map.md
+    └── gocho/             ← gocho 서비스 도메인 지식
+        ├── service.md
+        └── domain/
+            └── glossary.md
 ```
 
 ### 구조 확장 규칙
