@@ -53,34 +53,33 @@ Context는 "무엇(what)"만 담는다.
 ```
 deeple-context/
 ├── AGENTS.md              ← 이 파일
-└── docs/                  ← 도메인 지식 문서 (LLM Wiki)
-    ├── shared/            ← 공통 조직 지식
-    │   ├── claude-code-overview.md
-    │   ├── workspace-guide.md
-    │   ├── db-guide.md
-    │   ├── mcp-figma-setup.md
-    │   ├── mcp-mysql-setup.md
-    │   └── mcp-puppeteer-setup.md
-    ├── dmand/             ← 디맨드 서비스 도메인 지식
-    │   ├── design-system.md
-    │   ├── service.md
-    │   ├── domain/
-    │   │   ├── glossary.md
-    │   │   └── business-rules.md
-    │   └── cs/
-    │       ├── AGENTS.md
-    │       ├── persona.md
-    │       ├── refund-policy.md
-    │       ├── account-policy.md
-    │       ├── mentoring-policy.md
-    │       ├── data-curation-policy.md
-    │       ├── faq-guide.md
-    │       ├── escalation.md
-    │       └── screen-code-db-map.md
-    └── gocho/             ← gocho 서비스 도메인 지식
-        ├── service.md
-        └── domain/
-            └── glossary.md
+├── shared/                ← 공통 조직 지식
+│   ├── claude-code-overview.md
+│   ├── workspace-guide.md
+│   ├── db-guide.md
+│   ├── mcp-figma-setup.md
+│   ├── mcp-mysql-setup.md
+│   └── mcp-puppeteer-setup.md
+├── dmand/                 ← 디맨드 서비스 도메인 지식
+│   ├── design-system.md
+│   ├── service.md
+│   ├── domain/
+│   │   ├── glossary.md
+│   │   └── business-rules.md
+│   └── cs/
+│       ├── AGENTS.md
+│       ├── persona.md
+│       ├── refund-policy.md
+│       ├── account-policy.md
+│       ├── mentoring-policy.md
+│       ├── data-curation-policy.md
+│       ├── faq-guide.md
+│       ├── escalation.md
+│       └── screen-code-db-map.md
+└── gocho/                 ← gocho 서비스 도메인 지식
+    ├── service.md
+    └── domain/
+        └── glossary.md
 ```
 
 ### 구조 확장 규칙
