@@ -10,7 +10,7 @@
 | `deeple-context` | **도메인 지식(what)** — 서비스 개요, 도메인 용어, 비즈니스 규칙, 정책, 페르소나 |
 | `deeple-skill` | **범용 실행 도구(how)** — 프로세스, 워크플로우, 체크리스트 |
 | `GOCHO_BE` | 백엔드 코드 + 기술 문서 (`docs/`) |
-| `gocho` | 웹 프론트 코드 + 기술 문서 (`docs/`) |
+| `gocho` | 웹 프론트 코드 + 기술 문서 (`docs/`) — *디맨드 웹* |
 | `flutter-gocho-app` | Flutter 앱 코드 + 기술 문서 (`docs/`) |
 
 ---
@@ -61,7 +61,6 @@ deeple-context/
 │   ├── mcp-mysql-setup.md
 │   └── mcp-puppeteer-setup.md
 ├── dmand/                 ← 디맨드 서비스 도메인 지식
-│   ├── design-system.md
 │   ├── service.md
 │   ├── domain/
 │   │   ├── glossary.md
@@ -76,10 +75,11 @@ deeple-context/
 │       ├── faq-guide.md
 │       ├── escalation.md
 │       └── screen-code-db-map.md
-└── gocho/                 ← gocho 서비스 도메인 지식
-    ├── service.md
-    └── domain/
-        └── glossary.md
+└── automation/            ← context 자동화 봇 코드 및 인프라
+    ├── src/
+    ├── infra/
+    ├── tests/
+    └── docs/
 ```
 
 ### 구조 확장 규칙

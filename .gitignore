@@ -1,1 +1,19 @@
+# IDE
 .idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Automation runtime
+automation/.venv/
+automation/__pycache__/
+automation/src/__pycache__/
+
+# macOS
+.DS_Store
