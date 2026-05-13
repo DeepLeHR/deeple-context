@@ -7,9 +7,9 @@ from context_git import (
     create_pull_request,
     sanitize_branch_name,
 )
-from context_extractor import extract_thread_messages, get_permalink
-from slack_sender import send_message
-from notion_converter import fetch_notion_page_markdown, extract_page_id_from_url
+from slack.extractor import extract_thread_messages, get_permalink
+from slack.sender import send_message
+from notion.converter import fetch_notion_page_markdown, extract_page_id_from_url
 
 KST = timezone(timedelta(hours=9))
 DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"

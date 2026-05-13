@@ -2,10 +2,8 @@ import json
 import base64
 import urllib.parse
 
-from commander import command_processor
-from actor import action_processor, shortcut_processor
-from event_processor import handle_slack_event
-from cron_handler import run_daily_sync
+from slack.event_processor import handle_slack_event
+from notion.db_sync import run_daily_sync
 from context_save_handler import save_slack_thread
 
 
@@ -22,7 +20,7 @@ def lambda_handler(event, context):
         print("Cron triggered")
         return run_daily_sync()
 
-    # 3. API Gateway (Slack)
+    # 3. API Gateway (Slack Event API)
     body_raw = event.get("body", "")
     is_base64 = event.get("isBase64Encoded", False)
 
@@ -52,7 +50,7 @@ def lambda_handler(event, context):
         print("Parsed as form-urlencoded (Slash/Interactive)")
         pass
 
-    # 4. form-urlencoded (Slash Command / Block Actions / Message Shortcut)
+    # 4. form-urlencoded (Slash Command / Interactive)
     decoded_body = urllib.parse.unquote(body_raw)
     body = urllib.parse.parse_qs(decoded_body)
 
@@ -67,18 +65,14 @@ def lambda_handler(event, context):
 
         print({"command": command, "text": text, "response_url": response_url})
 
-        return command_processor(command, text, response_url)
-    else:
-        payload = json.loads(body["payload"][0])
-        payload_type = payload.get("type", "")
-        response_url = check_null(payload["response_url"])
-
-        if payload_type == "message_action":
-            return shortcut_processor(payload, response_url)
+        if command == "/context-save":
+            from context_save_handler import save_notion_page
+            return save_notion_page(text.strip(), response_url)
         else:
-            blocks = check_null(payload["state"]["values"])
-            action = check_null(payload["actions"][0])
-            return action_processor(blocks, action, response_url)
+            return {"statusCode": 404, "body": "Unknown command"}
+    else:
+        # Interactive components — 현재 미사용
+        return {"statusCode": 200, "body": "OK"}
 
 
 def _handle_sqs_records(records):
@@ -103,7 +97,6 @@ def _handle_sqs_records(records):
 
     if errors:
         print(f"SQS processing errors: {errors}")
-        # SQS DLQ로 전달되도록 500 반환 (retry)
         return {"statusCode": 500, "body": json.dumps({"errors": errors}, ensure_ascii=False)}
 
     return {"statusCode": 200, "body": "OK"}

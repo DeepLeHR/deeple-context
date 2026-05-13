@@ -1,9 +1,9 @@
 import os
 import json
 import boto3
-from slack_sender import send_message
+from slack.sender import send_message
 from context_save_handler import save_slack_thread
-from context_extractor import get_channel_info
+from slack.extractor import get_channel_info
 from context_git import get_file_info, write_content
 
 SLACK_CONTEXT_CHANNELS = os.environ.get("SLACK_CONTEXT_CHANNELS", "")

@@ -1,8 +1,8 @@
 import os
 import json
 from datetime import datetime, timezone, timedelta
-from notion import find_pages, update_property
-from notion_converter import fetch_notion_page_markdown
+from notion.client import find_pages, update_property
+from notion.converter import fetch_notion_page_markdown
 from context_git import get_file_info, write_content
 from context_analyzer import analyze_placement
 from context_save_handler import build_source_header
