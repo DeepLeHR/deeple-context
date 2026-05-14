@@ -151,7 +151,7 @@ EventBridge가 Lambda를 invoke할 수 있도록 권한을 추가합니다.
 
 | 변수명 | 필수 | 설명 |
 |--------|------|------|
-| `OPENAI_API_KEY` | ✅ | GPT-4o-mini 분석용 |
+| `ANTHROPIC_API_KEY` | ✅ | Claude Haiku 분석용 |
 | `GITHUB_TOKEN` | ✅ | GitHub API 인증 |
 | `SLACK_BOT_TOKEN` | ✅ | Slack API 인증 |
 | `SLACK_CONTEXT_CHANNELS` | ✅ | 📌 트리거 채널 ID 목록 (쉼표 구분) |

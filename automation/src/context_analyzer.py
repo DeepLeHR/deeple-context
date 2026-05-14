@@ -2,9 +2,11 @@ import os
 import json
 from pathlib import Path
 from typing import Optional
-import openai
+import anthropic
 
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+anthropic_client = anthropic.Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY")
+)
 
 # 로컬 repo 기준: automation/src/ → repo root
 CONTEXT_ROOT = Path(__file__).parent.parent.parent
@@ -92,16 +94,16 @@ def analyze_placement(content: str) -> dict:
 위 콘텐츠를 deeple-context에 저장하려고 합니다. 최적의 경로와 방식을 결정해주세요."""
 
     try:
-        response = openai.chat.completions.create(
-            model="gpt-4o-mini",
+        response = anthropic_client.messages.create(
+            model="claude-haiku-4-5",
+            max_tokens=1024,
+            temperature=0.2,
+            system=SYSTEM_PROMPT,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0.2,
-            max_tokens=800,
         )
-        raw = response.choices[0].message.content.strip()
+        raw = response.content[0].text.strip()
         if "```json" in raw:
             raw = raw.split("```json")[1].split("```")[0].strip()
         elif "```" in raw:

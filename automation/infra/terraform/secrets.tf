@@ -9,7 +9,7 @@ resource "aws_secretsmanager_secret" "this" {
 resource "aws_secretsmanager_secret_version" "initial" {
   secret_id = aws_secretsmanager_secret.this.id
   secret_string = jsonencode({
-    OPENAI_API_KEY        = "sk-placeholder"
+    ANTHROPIC_API_KEY     = "sk-ant-placeholder"
     GITHUB_TOKEN          = "ghp-placeholder"
     SLACK_BOT_TOKEN       = "xoxb-placeholder"
     SLACK_CONTEXT_CHANNELS = ""

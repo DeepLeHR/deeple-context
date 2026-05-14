@@ -93,7 +93,7 @@ Terraform으로 생성된 Secrets Manager에 실제 API 키/토큰을 입력합�
 aws secretsmanager put-secret-value \
   --secret-id slack-bot/prod \
   --secret-string '{
-    "OPENAI_API_KEY": "sk-xxx",
+    "ANTHROPIC_API_KEY": "sk-xxx",
     "GITHUB_TOKEN": "ghp-xxx",
     "SLACK_BOT_TOKEN": "xoxb-xxx",
     "SLACK_CONTEXT_CHANNELS": "C123,C456",
