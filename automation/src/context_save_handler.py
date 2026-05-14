@@ -132,15 +132,16 @@ def save_slack_thread(channel_id: str, thread_ts: str, response_url: str = None)
         # 3. AI로 최적 위치 분석
         placement = analyze_placement(content)
 
-        # 4. 브랜치 생성
-        branch_name = f"context/slack-{sanitize_branch_name(channel_id)}-{sanitize_branch_name(thread_ts)}"
-        create_branch(branch_name)
-
-        # 5. 파일 쓰기 (브랜치 기준)
-        file_path = placement["new_path"]
+        # 4. 경로 검증
+        file_path = _validate_path(placement["new_path"])
         action = placement["action"]
         title = placement["title"]
 
+        # 5. 브랜치 생성
+        branch_name = f"context/slack-{sanitize_branch_name(channel_id)}-{sanitize_branch_name(thread_ts)}"
+        create_branch(branch_name)
+
+        # 6. 파일 쓰기 (브랜치 기준)
         write_content(file_path, full_content, title, action, branch=branch_name)
 
         # 6. PR 생성
@@ -190,7 +191,7 @@ def save_notion_page(notion_url: str, response_url: str):
         full_content = source_header + content
 
         placement = analyze_placement(content)
-        file_path = placement["new_path"]
+        file_path = _validate_path(placement["new_path"])
         action = placement["action"]
         title = placement["title"]
 

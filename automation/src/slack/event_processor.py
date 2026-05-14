@@ -40,6 +40,9 @@ def _handle_reaction_added(event: dict) -> dict:
 
     # Public channel만 허용 (개인정보/기밀 누출 방지)
     channel_info = get_channel_info(channel_id)
+    if channel_info.get("_error"):
+        print(f"Channel info unavailable for {channel_id}. Ignored for safety.")
+        return {"statusCode": 200, "body": "Channel info unavailable"}
     if channel_info.get("is_private") or channel_info.get("is_im") or channel_info.get("is_mpim"):
         print(f"Channel {channel_id} is private/DM. Ignored.")
         return {"statusCode": 200, "body": "Private channel ignored"}
@@ -49,19 +52,23 @@ def _handle_reaction_added(event: dict) -> dict:
         print(f"Already processed: {channel_id}/{message_ts}")
         return {"statusCode": 200, "body": "Already processed"}
 
-    # SQS 전송 전에 선점 표시 (race condition 방지)
-    # 다른 인스턴스가 동시에 들어와도 이 표시로 중복 처리 방지
+    # SQS로 전송하고 즉시 200 응답 (3초 타임아웃 방지)
+    try:
+        _send_to_sqs({
+            "type": "slack_reaction",
+            "channel_id": channel_id,
+            "message_ts": message_ts,
+        })
+    except Exception as e:
+        print(f"Failed to send SQS: {e}")
+        return {"statusCode": 500, "body": f"SQS send failed: {e}"}
+
+    # SQS 전송 성공 후 선점 표시
+    # (SQS 전에 표시하면 전송 실패 시 영구 유실되므로, 전송 후에 기록)
     try:
         mark_message_pinned(channel_id, message_ts)
     except Exception as e:
-        print(f"Failed to mark pinned before SQS: {e}")
-
-    # SQS로 전송하고 즉시 200 응답 (3초 타임아웃 방지)
-    _send_to_sqs({
-        "type": "slack_reaction",
-        "channel_id": channel_id,
-        "message_ts": message_ts,
-    })
+        print(f"Failed to mark pinned after SQS: {e}")
 
     return {"statusCode": 200, "body": "Accepted"}
 

@@ -61,7 +61,8 @@ def get_channel_info(channel_id: str) -> dict:
     data = response.json()
 
     if not data.get("ok"):
-        return {}
+        print(f"Failed to get channel info: {data.get('error')}")
+        return {"_error": True}
     return data.get("channel", {})
 
 

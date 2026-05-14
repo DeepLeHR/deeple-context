@@ -99,7 +99,7 @@ data "aws_iam_policy_document" "github_oidc" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:DeepLeHR/slack-bot:*"]
+      values   = ["repo:DeepLeHR/deeple-context:*"]
     }
   }
 }

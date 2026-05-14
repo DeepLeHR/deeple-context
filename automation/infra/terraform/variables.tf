@@ -37,7 +37,7 @@ variable "context_branch" {
 variable "lambda_timeout" {
   description = "Lambda 타임아웃 (초)"
   type        = number
-  default     = 30
+  default     = 120
 }
 
 variable "lambda_memory" {

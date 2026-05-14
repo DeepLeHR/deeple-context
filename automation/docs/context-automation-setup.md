@@ -12,12 +12,12 @@
 
 | 모듈 | 파일 | 역할 |
 |------|------|------|
-| AI Analyzer | `context_analyzer.py` | 기존 context 구조 분석 + LLM으로 최적 경로/파일명/병합여부 결정 |
+| AI Analyzer | `context_analyzer.py` | GitHub API로 기존 context 구조 분석 + LLM으로 최적 경로/파일명/병합여부 결정 |
 | Git Operator | `context_git.py` | GitHub Contents API로 파일 직접 쓰기/커밋 (git 바이너리 불필요) |
-| Slack Extractor | `context_extractor.py` | Slack Thread 메시지 수집 및 마크다운 변환 |
-| Event Processor | `event_processor.py` | 📌 이모지 이벤트 수신 + 채널 필터링 + 중복 방지 |
-| Cron Handler | `cron_handler.py` | 자정 노션 DB 폴리싱 + target_path 저장 + synced_at 갱신 |
-| Notion Converter | `notion_converter.py` | Notion Block → Markdown 변환 |
+| Slack Extractor | `slack/extractor.py` | Slack Thread 메시지 수집 및 마크다운 변환 |
+| Event Processor | `slack/event_processor.py` | 📌 이모지 이벤트 수신 + 채널 필터링 + 중복 방지 |
+| Notion Sync | `notion/db_sync.py` | 자정 노션 DB 폴리싱 + target_path 저장 + synced_at 갱신 + sync_to_context 해제 |
+| Notion Converter | `notion/converter.py` | Notion Block → Markdown 변환 |
 | Save Handler | `context_save_handler.py` | 전체 저장 파이프라인 오케스트레이션 |
 
 ---
@@ -38,14 +38,20 @@
 
 ### 1.2 Event Subscriptions
 
-**Request URL**: `https://your-lambda-url/`
+**Request URL**: Lambda Function URL 또는 API Gateway 엔드포인트
 
 Subscribe to bot events:
 - `reaction_added` ✅
 
-> 처음 등록 시 Slack이 `url_verification` challenge를 볃. Lambda가 challenge를 그대로 반환하면 활성화됩니다.
+> 처음 등록 시 Slack이 `url_verification` challenge를 보냅니다. Lambda가 challenge를 그대로 반환하면 활성화됩니다.
 
-### 1.3 환경변수
+### 1.3 Slash Command
+
+- Command: `/context-save`
+- Request URL: 동일 Lambda 엔드포인트
+- 사용법: `/context-save https://notion.so/...`
+
+### 1.4 환경변수
 
 ```bash
 SLACK_BOT_TOKEN=xoxb-...           # Bot User OAuth Token
@@ -67,12 +73,14 @@ SLACK_CONTEXT_CHANNELS=C123,C456   # 📌 트리거를 허용할 채널 ID (쉼�
 ```
 1. 메시지 작성 (또는 기존 메시지)
 2. 해당 메시지에 📌 (pushpin) 이모지 반응 추가
-3. Lambda가 이벤트 수신 → 스레드 전체 수집 → AI 분석 → context 저장
-4. (선택) 결과를 DM으로 알림
+3. Lambda가 이벤트 수신 → SQS 대기열에 등록 → 즉시 200 응답
+4. Worker(Lambda)가 SQS 메시지 처리 → 스레드 수집 → AI 분석 → GitHub PR 생성
 ```
 
 ### 중복 방지
 `_sync/slack-pins.log`에 처리된 `channel_id/message_ts`를 기록하여 중복 저장을 방지합니다.
+
+> ⚠️ **Private 채널/DM은 보안상 자동 무시됩니다.**
 
 ---
 
@@ -89,11 +97,12 @@ SLACK_CONTEXT_CHANNELS=C123,C456   # 📌 트리거를 허용할 채널 ID (쉼�
 
 | 속성명 | 타입 | 설명 |
 |--------|------|------|
-| `sync_to_context` | Checkbox | ✅ 체크 시 자정에 동기화 대상 |
+| `sync_to_context` | Checkbox | ✅ 체크 시 자정에 동기화 대상 (동기화 후 자동 해제) |
 | `target_path` | Text | 사용자 지정 저장 경로 (예: `dmand/cs/refund-policy.md`) |
 | `synced_at` | Date | 마지막 동기화 일자 (시스템 자동 기록) |
 
 > `target_path`가 비어있으면 AI가 자동으로 경로를 분석합니다.
+> `sync_to_context`는 동기화 완료 후 **자동으로 unchecked** 됩니다.
 
 ### 3.3 페이지 공유
 - 동기화할 Database 페이지 상단 `⋯` → `Add connections` → `Context Automation` 선택
@@ -128,22 +137,8 @@ CONTEXT_BRANCH=main              # 선택
 
 매일 자정(KST)에 Lambda를 트리거하여 Notion DB를 폴리싱합니다.
 
-### 5.1 EventBridge Rule 생성
-```json
-{
-  "name": "context-sync-daily-midnight-kst",
-  "schedule": "cron(0 15 * * ? *)",
-  "target": {
-    "arn": "arn:aws:lambda:ap-northeast-2:ACCOUNT:function:slack-bot",
-    "input": "{\"source\":\"aws.events\"}"
-  }
-}
-```
-
-> KST 자정 = UTC 15:00
-
-### 5.2 Lambda 트리거 권한 추가
-EventBridge가 Lambda를 invoke할 수 있도록 권한을 추가합니다.
+Terraform으로 `eventbridge.tf`에 이미 정의되어 있습니다:
+- Schedule: `cron(0 15 * * ? *)` (KST 자정 = UTC 15:00)
 
 ---
 
@@ -161,6 +156,8 @@ EventBridge가 Lambda를 invoke할 수 있도록 권한을 추가합니다.
 | `CONTEXT_REPO_NAME` | ❌ | 기본 `deeple-context` |
 | `CONTEXT_BRANCH` | ❌ | 기본 `main` |
 
+> 민감한 값은 AWS Secrets Manager(`deeple-context-automation/prod`)에 저장하고, Lambda 환경변수에는 Secrets Manager 이름만 노출합니다.
+
 ---
 
 ## 7. deeple-context 메타데이터 구조
@@ -174,7 +171,7 @@ deeple-context/
 │   └── slack-pins.log         ← 처리된 Slack 메시지 ts 기록
 ├── dmand/
 │   └── cs/
-│       └── refund-policy.md   ← 헤더: <!-- Source: notion.so/... | Synced: ... -->
+│       └── refund-policy.md   ← 헤더: source / notion_page_id / last_synced / edit_priority
 └── ...
 ```
 
@@ -199,6 +196,8 @@ deeple-context/
 | 📌 달아도 반응 없음 | Event Subscriptions 미등록 | Slack App → Event Subscriptions → `reaction_added` 추가 |
 | "Channel not targeted" | 채널 ID 불일치 | `SLACK_CONTEXT_CHANNELS`에 정확한 채널 ID 입력 |
 | "Already processed" | 중복 이모지 | `_sync/slack-pins.log`에 기록됨. 수동 삭제 시 GitHub에서 해당 라인 제거 |
+| "Private channel ignored" | Private/DM 채널 | 보안상 public 채널만 허용. 의도된 동작입니다. |
 | 노션 동기화 안 됨 | DB 공유 안 됨 | Integration을 Database에 연결 |
 | `target_path` 무시됨 | 필드명 불일치 | Notion 속성명이 정확히 `target_path`인지 확인 |
-| EventBridge 미작동 | Lambda 권한 부족 | EventBridge → Lambda invoke 권한 추가 |
+| EventBridge 미작동 | Lambda 권한 부족 | EventBridge → Lambda invoke 권한 추가 (Terraform으로 이미 설정됨) |
+| PR이 매일 생성됨 | `sync_to_context` 미해제 | 동기화 후 자동 해제되므로 정상입니다. 반복 동기화가 필요하면 수동으로 다시 체크하세요. |

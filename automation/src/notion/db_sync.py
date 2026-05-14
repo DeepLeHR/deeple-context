@@ -107,11 +107,14 @@ def _sync_page(page: dict) -> dict:
     # 5. notion-mapping.yaml 업데이트
     _update_notion_mapping(page_id, file_path, title)
 
-    # 6. synced_at 업데이트
+    # 6. synced_at 업데이트 + sync_to_context 해제 (일회성 동기화)
     now_iso = datetime.now(KST).strftime("%Y-%m-%d")
     update_property(
         page_id,
-        {"synced_at": {"date": {"start": now_iso}}},
+        {
+            "synced_at": {"date": {"start": now_iso}},
+            "sync_to_context": {"checkbox": False},
+        },
     )
 
     return {

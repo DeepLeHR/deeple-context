@@ -1,55 +1,40 @@
 import os
 import json
-from pathlib import Path
 from typing import Optional
 import anthropic
+
+from context_git import get_repo_tree, get_file_preview
 
 anthropic_client = anthropic.Anthropic(
     api_key=os.environ.get("ANTHROPIC_API_KEY")
 )
 
-# 로컬 repo 기준: automation/src/ → repo root
-CONTEXT_ROOT = Path(__file__).parent.parent.parent
-
 
 def get_context_tree() -> str:
-    """deeple-context의 md 파일 목록을 로컬에서 조회"""
-    files = []
-    for path in sorted(CONTEXT_ROOT.rglob("*.md")):
-        rel = path.relative_to(CONTEXT_ROOT)
-        # 숨김 파일, automation/, _sync/ 제외
-        if any(part.startswith(".") for part in rel.parts):
-            continue
-        if str(rel).startswith("automation/"):
-            continue
-        files.append(str(rel))
-    return "\n".join(files)
+    """GitHub API로 deeple-context의 md 파일 목록을 조회"""
+    try:
+        files = get_repo_tree()
+        return "\n".join(files)
+    except Exception as e:
+        print(f"Failed to get context tree from GitHub: {e}")
+        return ""
 
 
 def get_file_summaries(max_chars: int = 300) -> str:
-    """각 md 파일의 경로 + 앞부분 요약 (로컬에서 읽기)"""
-    summaries = []
-    for path in sorted(CONTEXT_ROOT.rglob("*.md")):
-        rel = path.relative_to(CONTEXT_ROOT)
-        if any(part.startswith(".") for part in rel.parts):
-            continue
-        if str(rel).startswith("automation/"):
-            continue
-        try:
-            content = path.read_text(encoding="utf-8")
-            preview = ""
-            for line in content.strip().splitlines():
-                stripped = line.strip()
-                if stripped:
-                    preview += stripped + " "
-                if len(preview) >= max_chars:
-                    break
-            summaries.append(f"- {rel}: {preview[:max_chars].strip()}")
-        except Exception:
-            continue
-        if len(summaries) >= 50:
-            break
-    return "\n".join(summaries)
+    """GitHub API로 각 md 파일의 경로 + 앞부분 요약 조회"""
+    try:
+        files = get_repo_tree()
+        summaries = []
+        for file_path in files:
+            preview = get_file_preview(file_path, max_chars=max_chars)
+            if preview:
+                summaries.append(f"- {file_path}: {preview}")
+            if len(summaries) >= 50:
+                break
+        return "\n".join(summaries)
+    except Exception as e:
+        print(f"Failed to get file summaries from GitHub: {e}")
+        return ""
 
 
 SYSTEM_PROMPT = """당신은 'deeple-context'라는 공유 지식 저장소의 구조를 분석하고, 새로운 도메인 지식을 최적의 위치에 배치하는 AI 아키텍트입니다.
@@ -95,7 +80,7 @@ def analyze_placement(content: str) -> dict:
 
     try:
         response = anthropic_client.messages.create(
-            model="claude-haiku-4-5",
+            model="claude-3-haiku-20240307",
             max_tokens=1024,
             temperature=0.2,
             system=SYSTEM_PROMPT,
