@@ -14,10 +14,12 @@ resource "aws_lambda_function" "this" {
 
   environment {
     variables = {
-      CONTEXT_REPO_OWNER = var.context_repo_owner
-      CONTEXT_REPO_NAME  = var.context_repo_name
-      CONTEXT_BRANCH     = var.context_branch
-      SQS_QUEUE_URL      = aws_sqs_queue.this.url
+      CONTEXT_REPO_OWNER   = var.context_repo_owner
+      CONTEXT_REPO_NAME    = var.context_repo_name
+      CONTEXT_BRANCH       = var.context_branch
+      SQS_QUEUE_URL        = aws_sqs_queue.this.url
+      SECRETS_MANAGER_NAME = aws_secretsmanager_secret.this.name
+      AWS_REGION           = var.aws_region
     }
   }
 

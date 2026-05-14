@@ -2,6 +2,9 @@ import json
 import base64
 import urllib.parse
 
+from secrets_loader import load_secrets
+load_secrets()  # Lambda 초기화 시 Secrets Manager에서 환경변수 로드
+
 from slack.event_processor import handle_slack_event
 from notion.db_sync import run_daily_sync
 from context_save_handler import save_slack_thread
