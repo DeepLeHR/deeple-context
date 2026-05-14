@@ -103,6 +103,12 @@ def _build_error_message(error: str) -> dict:
 
 def save_slack_thread(channel_id: str, thread_ts: str, response_url: str = None):
     """슬랙 스레드를 context에 PR로 저장"""
+    # Worker 레벨 중복 체크 (SQS at-least-once delivery 대응)
+    from context_git import is_message_pinned
+    if is_message_pinned(channel_id, thread_ts):
+        print(f"Worker: already processed {channel_id}/{thread_ts}")
+        return {"statusCode": 200, "body": "Already processed in worker"}
+
     try:
         # 1. 스레드 메시지 수집
         content = extract_thread_messages(channel_id, thread_ts)

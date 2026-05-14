@@ -4,7 +4,7 @@ import boto3
 from slack.sender import send_message
 from context_save_handler import save_slack_thread
 from slack.extractor import get_channel_info
-from context_git import get_file_info, write_content
+from context_git import is_message_pinned, mark_message_pinned
 
 SLACK_CONTEXT_CHANNELS = os.environ.get("SLACK_CONTEXT_CHANNELS", "")
 TARGET_CHANNELS = {c.strip() for c in SLACK_CONTEXT_CHANNELS.split(",") if c.strip()}
@@ -44,10 +44,17 @@ def _handle_reaction_added(event: dict) -> dict:
         print(f"Channel {channel_id} is private/DM. Ignored.")
         return {"statusCode": 200, "body": "Private channel ignored"}
 
-    # 중복 처리 방지
-    if _is_already_pinned(channel_id, message_ts):
+    # 중복 처리 방지 (정확한 라인 단위 매칭)
+    if is_message_pinned(channel_id, message_ts):
         print(f"Already processed: {channel_id}/{message_ts}")
         return {"statusCode": 200, "body": "Already processed"}
+
+    # SQS 전송 전에 선점 표시 (race condition 방지)
+    # 다른 인스턴스가 동시에 들어와도 이 표시로 중복 처리 방지
+    try:
+        mark_message_pinned(channel_id, message_ts)
+    except Exception as e:
+        print(f"Failed to mark pinned before SQS: {e}")
 
     # SQS로 전송하고 즉시 200 응답 (3초 타임아웃 방지)
     _send_to_sqs({
@@ -55,7 +62,6 @@ def _handle_reaction_added(event: dict) -> dict:
         "channel_id": channel_id,
         "message_ts": message_ts,
     })
-    _mark_pinned(channel_id, message_ts)
 
     return {"statusCode": 200, "body": "Accepted"}
 
@@ -69,34 +75,3 @@ def _send_to_sqs(message: dict):
         QueueUrl=SQS_QUEUE_URL,
         MessageBody=json.dumps(message),
     )
-
-
-def _is_already_pinned(channel_id: str, message_ts: str) -> bool:
-    """slack-pins.log에서 중복 확인"""
-    try:
-        exists, _, content = get_file_info("_sync/slack-pins.log")
-        if not exists:
-            return False
-        key = f"{channel_id}/{message_ts}"
-        return key in content
-    except Exception:
-        return False
-
-
-def _mark_pinned(channel_id: str, message_ts: str):
-    """처리 완료 기록"""
-    try:
-        exists, _, content = get_file_info("_sync/slack-pins.log")
-        new_line = f"{channel_id}/{message_ts}\n"
-        if exists:
-            new_content = content + new_line
-        else:
-            new_content = new_line
-        write_content(
-            "_sync/slack-pins.log",
-            new_content,
-            title=None,
-            action="update" if exists else "create",
-        )
-    except Exception as e:
-        print(f"Failed to mark pinned: {e}")

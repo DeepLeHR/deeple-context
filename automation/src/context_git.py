@@ -156,3 +156,39 @@ def create_pull_request(title: str, body: str, head: str, base: str = None) -> d
 def sanitize_branch_name(name: str) -> str:
     """브랜치명으로 사용할 수 없는 문자 제거"""
     return re.sub(r"[^a-zA-Z0-9._-]", "-", name)[:50]
+
+
+# ── 중복 처리 방지 (slack-pins.log) ─────────────────────────────
+
+def is_message_pinned(channel_id: str, message_ts: str) -> bool:
+    """슬랙 메시지가 이미 처리되었는지 확인 (정확한 라인 단위 매칭)"""
+    try:
+        exists, _, content = get_file_info("_sync/slack-pins.log")
+        if not exists:
+            return False
+        key = f"{channel_id}/{message_ts}"
+        for line in content.splitlines():
+            if line.strip() == key:
+                return True
+        return False
+    except Exception:
+        return False
+
+
+def mark_message_pinned(channel_id: str, message_ts: str):
+    """슬랙 메시지 처리 완료 기록"""
+    try:
+        exists, _, content = get_file_info("_sync/slack-pins.log")
+        new_line = f"{channel_id}/{message_ts}\n"
+        if exists:
+            new_content = content + new_line
+        else:
+            new_content = new_line
+        write_content(
+            "_sync/slack-pins.log",
+            new_content,
+            title=None,
+            action="update" if exists else "create",
+        )
+    except Exception as e:
+        print(f"Failed to mark pinned: {e}")
