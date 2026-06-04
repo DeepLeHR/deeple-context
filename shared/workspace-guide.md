@@ -33,9 +33,10 @@ deeple-context/
 │   ├── db-guide.md
 │   └── mcp-*.md
 └── dmand/                 # 서비스별 도메인 지식
-    ├── service.md
-    ├── design-system.md
+    ├── overview.md
     ├── domain/
+    ├── market/
+    ├── product/
     └── cs/
 ```
 
