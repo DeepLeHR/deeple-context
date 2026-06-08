@@ -21,6 +21,7 @@
 
 - **도메인 지식** — "무엇인가" (what)
 - **서비스 개요** — 플로우, 기능 설명, 주요 화면
+- **시장 분석** — 시장 규모(TAM/SAM/SOM), 타겟 고객, 경쟁사·포지셔닝
 - **비즈니스 규칙** — 환불 조건, 멤버십 혜택, 가격 정책
 - **정책 문서** — 환불 정책, 에스컬레이션, 계정 정책
 - **CS 페르소나** — 응대 말투, 톤, 이모티콘 기준, 금지어
@@ -61,10 +62,20 @@ deeple-context/
 │   ├── mcp-mysql-setup.md
 │   └── mcp-puppeteer-setup.md
 ├── dmand/                 ← 디맨드 서비스 도메인 지식
-│   ├── service.md
+│   ├── overview.md        ← 서비스 최상위 개요 (4축 플랫폼·핵심지표·진입점)
 │   ├── domain/
 │   │   ├── glossary.md
 │   │   └── business-rules.md
+│   ├── market/            ← 시장 분석 (규모·고객·경쟁)
+│   │   ├── README.md
+│   │   ├── size.md
+│   │   ├── customers.md
+│   │   └── competitors.md
+│   ├── product/           ← 제품 상세 (기능·가격·데이터·AI)
+│   │   ├── README.md
+│   │   ├── spec-report.md
+│   │   ├── membership.md
+│   │   └── data-ai.md
 │   └── cs/
 │       ├── AGENTS.md
 │       ├── persona.md
