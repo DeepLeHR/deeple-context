@@ -6,8 +6,7 @@ Claude Code 또는 Codex(팀원 각자 로컬)에 `awslabs-cloudwatch` MCP 서�
 `aws logs ...` 명령을 직접 치지 않고 **대화로 `gocho-api-live`(ECS)·`AIGenerate-live`(Lambda)
 등의 로그를 조회·분석**하는 방법.
 
-- job-scraper 레포에는 CLI 방식 가이드(`job-scraper/docs/CLOUDWATCH_LOCAL_GUIDE.md`)가 따로 있다 — 그쪽은 `job-scraper-*` Lambda 로그 전용, `dmand-cloudwatch-readonly` 프로파일로 스크립트/자동화에 쓴다. **이 문서는 그 계정으로는 안 되는 `gocho-api-live`/`AIGenerate-live` 로그를 보기 위한 별도 자격증명·연결 방법**이다.
-- 이 MCP에 연결된 자격증명은 job-scraper 전용 조회 계정보다 범위가 넓다. `/ecs/gocho-api-live`, `/ecs/gocho-api-dev`, `/aws/lambda/AIGenerate-live`, `/aws/lambda/AIGenerate-dev`, `/aws/lambda/job-scraper-main-*`까지 조회된다. 다루는 로그에 사용자 개인정보(이름·전화번호·생년월일 등)가 그대로 남아있으니 취급에 주의한다(§6).
+- 이 MCP로 `/ecs/gocho-api-live`, `/ecs/gocho-api-dev`, `/aws/lambda/AIGenerate-live`, `/aws/lambda/AIGenerate-dev` 로그를 조회할 수 있다. 로그에 사용자 개인정보(이름·전화번호·생년월일 등)가 남아있을 수 있으니 취급에 주의한다(§7).
 
 ---
 
@@ -23,7 +22,7 @@ brew install uv
 
 ### 1-2. AWS 자격증명 받기
 
-이 MCP는 job-scraper의 `dmand-cloudwatch-viewer` 계정과 **다른, 더 넓은 범위의 액세스 키**를 쓴다. 이미 이 MCP를 쓰고 있는 팀원(또는 관리자)에게 액세스 키(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`)를 요청한다.
+AWS 액세스 키(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`)는 1Password에서 확인한다.
 
 - 슬랙/메일/노션 등에 평문으로 붙여넣지 않는다. 1Password나 화면 공유 등 안전한 채널로 받는다.
 - 시크릿 키는 1Password의 `dmand/cloudwatch-viewer` 항목에서 확인한다.
@@ -33,7 +32,7 @@ brew install uv
 
 ## 2. Claude Code 설정
 
-프로젝트 스코프 MCP 서버는 `~/workspace/deeplehr/.mcp.json` **한 파일에 모여 있다** (GOCHO_BE 상위 폴더, `job-scraper`·`deeple-claude-code` 등 deeplehr 산하 리포가 같이 공유). GOCHO_BE 안에는 `.mcp.json`이 따로 없다 — Claude Code가 이 상위 파일을 project-scope 설정으로 인식한다.
+프로젝트 스코프 MCP 서버는 `~/workspace/deeplehr/.mcp.json` **한 파일에 모여 있다**. GOCHO_BE 안에는 `.mcp.json`이 따로 없다 — Claude Code가 이 상위 파일을 project-scope 설정으로 인식한다.
 
 이 파일은 `~/.gitignore_global`에 의해 **전역 gitignore 처리**돼 있어 어느 리포에도 커밋되지 않는다. 즉 새 팀원의 로컬에는 이 파일이 아예 없을 것이므로 직접 만들어야 한다.
 
@@ -108,7 +107,6 @@ codex mcp get awslabs-cloudwatch
 |---|---|
 | `/ecs/gocho-api-live`, `/ecs/gocho-api-dev` | gocho 백엔드(Spring, ECS) — 이 레포 |
 | `/aws/lambda/AIGenerate-live`, `/aws/lambda/AIGenerate-dev` | AI 생성(자소서 등) Lambda |
-| `/aws/lambda/job-scraper-main-*` | job-scraper 파이프라인 |
 
 정확한 이름이 기억 안 나면:
 
@@ -117,7 +115,7 @@ aws logs describe-log-groups --region ap-northeast-2 \
   --log-group-name-prefix "/ecs/gocho-api" --query 'logGroups[].logGroupName' --output text
 ```
 
-(이 명령은 §1-2에서 받은 MCP 전용 키를 `AWS_PROFILE` 없이 `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 환경변수로 넣어야 동작한다. `dmand-cloudwatch-readonly` CLI 프로파일로는 `/ecs/...` 로그가 `AccessDenied`다 — job-scraper 로그 전용 계정이기 때문.)
+(이 명령은 §1-2의 MCP용 `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` 환경변수가 설정된 상태에서 실행한다.)
 
 ---
 
