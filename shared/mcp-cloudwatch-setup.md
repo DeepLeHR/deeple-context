@@ -22,10 +22,10 @@ brew install uv
 
 ### 1-2. AWS 자격증명 받기
 
-AWS 액세스 키(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`)는 1Password에서 확인한다.
+AWS 액세스 키(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`)는 AWS Secrets Manager에서 확인한다.
 
-- 슬랙/메일/노션 등에 평문으로 붙여넣지 않는다. 1Password나 화면 공유 등 안전한 채널로 받는다.
-- 시크릿 키는 1Password의 `dmand/cloudwatch-viewer` 항목에서 확인한다.
+- 슬랙/메일/노션 등에 평문으로 붙여넣지 않는다.
+- 시크릿 키는 AWS Secrets Manager의 `dmand/cloudwatch-viewer` 시크릿에서 확인한다.
 - 이 문서에는 실제 키 값을 적지 않는다 — 아래 `.mcp.json` 템플릿의 `<...>` 자리에 본인이 받은 값을 채운다.
 
 ---
