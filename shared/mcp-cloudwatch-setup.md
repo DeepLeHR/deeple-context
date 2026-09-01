@@ -26,6 +26,7 @@ brew install uv
 이 MCP는 job-scraper의 `dmand-cloudwatch-viewer` 계정과 **다른, 더 넓은 범위의 액세스 키**를 쓴다. 이미 이 MCP를 쓰고 있는 팀원(또는 관리자)에게 액세스 키(`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`)를 요청한다.
 
 - 슬랙/메일/노션 등에 평문으로 붙여넣지 않는다. 1Password나 화면 공유 등 안전한 채널로 받는다.
+- 시크릿 키는 1Password의 `dmand/cloudwatch-viewer` 항목에서 확인한다.
 - 이 문서에는 실제 키 값을 적지 않는다 — 아래 `.mcp.json` 템플릿의 `<...>` 자리에 본인이 받은 값을 채운다.
 
 ---
