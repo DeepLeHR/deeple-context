@@ -6,7 +6,8 @@ Claude Code 또는 Codex(팀원 각자 로컬)에 `awslabs-cloudwatch` MCP 서�
 `aws logs ...` 명령을 직접 치지 않고 **대화로 `gocho-api-live`(ECS)·`AIGenerate-live`(Lambda)
 등의 로그를 조회·분석**하는 방법.
 
-- 이 MCP로 `/ecs/gocho-api-live`, `/ecs/gocho-api-dev`, `/aws/lambda/AIGenerate-live`, `/aws/lambda/AIGenerate-dev` 로그를 조회할 수 있다. 로그에 사용자 개인정보(이름·전화번호·생년월일 등)가 남아있을 수 있으니 취급에 주의한다(§7).
+- 이 MCP로 `/ecs/gocho-api-live`, `/ecs/gocho-api-dev`, `/aws/lambda/AIGenerate-live`, `/aws/lambda/AIGenerate-dev` 로그를 조회할 수 있다. 로그에 사용자 개인정보(이름·전화번호·생년월일 등)가 남아있을 수 있으니 취급에 주의한다(§8).
+- CloudWatch Logs Insights는 **스캔한 데이터량(GB) 기준 종량제**다. 시간 범위를 넓게 잡거나 필터 없이 쿼리하면 비용이 늘어난다(§5).
 
 ---
 
@@ -101,7 +102,20 @@ codex mcp get awslabs-cloudwatch
 
 ---
 
-## 5. 조회 가능한 로그 그룹
+## 5. 비용 주의사항
+
+CloudWatch Logs Insights는 **스캔한 로그 데이터량(GB) 기준 종량제**다(서울 리전 기준 GB당 약 $0.0076). 쿼리 횟수가 아니라 얼마나 넓게 훑었는지로 과금되므로, 아래를 지키지 않으면 팀 몇 명이 가끔 조회하는 수준에서도 비용이 튈 수 있다.
+
+- **시간 범위를 항상 좁게 명시한다.** "지난 1시간" 정도로 요청해도 Claude Code가 이를 넓게 해석해 쿼리할 수 있으니, `execute_log_insights_query` 호출 시 `start_time`/`end_time`을 구체적인 값으로 지정하도록 확인한다. 기본값은 1시간 이내를 권장한다.
+- **쿼리에 `limit`과 필터를 같이 건다.** `| limit 50`처럼 결과 건수를 제한하면 스캔량도 줄어드는 효과가 있다(§7 예시 참고). 필터 없이 `fields @timestamp, @message`만 넓은 시간 범위로 돌리는 건 피한다.
+- **`gocho-api-live`는 로그 스트림으로 먼저 좁힌다.** nginx 액세스 로그와 애플리케이션 로그가 같은 로그 그룹에 섞여 있어(§7 참고) 스트림 필터 없이 전체를 스캔하면 실제 필요한 것보다 훨씬 많은 데이터를 긁는다. `filter @logStream like /ecs\/spring-api/` 같은 필터를 우선 걸어본다.
+- **결과가 비어도 무작정 범위를 넓혀 재시도하지 않는다.** 먼저 로그 그룹·스트림 이름과 리전(§4)이 맞는지 확인한 뒤, 필요할 때만 범위를 단계적으로 넓힌다. 넓히기를 반복하면 스캔량이 누적된다.
+- **대량/장기간 조회가 필요하면 사전에 공유 채널에 알린다.** MCP 키는 팀 공용 시크릿(`dmand/cloudwatch-viewer`)이라 개인별 사용량이 구분되지 않는다. 예: 사고 조사로 며칠치 로그를 훑어야 하는 경우.
+- **비용 알림(AWS Budget)을 걸어둔다.** CloudWatch 서비스 기준 월 예산 알림을 설정해두면 이상 사용을 조기에 감지할 수 있다. 단, Budget 생성은 조직 SCP로 멤버 계정(`Annie` 등)에서 막혀 있을 수 있다 — 관리(마스터) 계정 권한이 필요하면 담당자에게 요청한다.
+
+---
+
+## 6. 조회 가능한 로그 그룹
 
 | 로그 그룹 | 서비스 |
 |---|---|
@@ -119,7 +133,7 @@ aws logs describe-log-groups --region ap-northeast-2 \
 
 ---
 
-## 6. 사용 예시
+## 7. 사용 예시
 
 Claude Code 대화창에 자연어로 요청하면 된다. 예:
 
@@ -142,7 +156,7 @@ fields @timestamp, @message
 
 ---
 
-## 7. 보안 유의사항
+## 8. 보안 유의사항
 
 - `~/workspace/deeplehr/.mcp.json`에는 액세스 키가 **평문**으로 들어간다. 전역 gitignore로 커밋은 막혀 있지만, 파일 자체가 크리덴셜이므로 화면 공유·백업·Dropbox 동기화 폴더 등에 노출되지 않게 각자 주의한다.
 - 이 키는 서비스 로그를 폭넓게 읽을 수 있어, 로그 메시지에 사용자 개인정보(이름, 전화번호, 생년월일 등)가 그대로 남아있는 경우가 있다(`HttpLoggingFilter`가 요청/응답 바디를 찍는 방식은 `GOCHO_BE/docs/infra/cloudwatch-log-cost-reduction.md` §2~3 참고). 대화 결과를 슬랙/노션 등에 옮길 때 개인정보를 원문 그대로 붙여넣지 않는다.
@@ -150,7 +164,7 @@ fields @timestamp, @message
 
 ---
 
-## 8. 안 될 때
+## 9. 안 될 때
 
 | 증상 | 원인 / 조치 |
 |---|---|
